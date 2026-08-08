@@ -1,0 +1,7 @@
+import {
+  "spectacleCase/moonbook",
+}
+
+options(
+  "is-main": true,
+)
