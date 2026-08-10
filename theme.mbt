@@ -4,4 +4,4 @@ pub let default_theme_css : String =
 
 ///|
 pub let default_theme_js : String =
-  #|(()=>{const box=document.querySelector('[data-search]');if(!box)return;box.addEventListener('input',()=>{const q=box.value.toLowerCase();document.querySelectorAll('[data-title]').forEach(x=>x.hidden=!x.dataset.title.toLowerCase().includes(q))})})();
+  #|(()=>{const box=document.querySelector('[data-search]');if(!box)return;const rows=[...document.querySelectorAll('[data-title]')];let index=[];const script=document.currentScript;const url=new URL('search-index.json',script.src);fetch(url).then(r=>r.ok?r.json():[]).then(data=>{index=data}).catch(()=>{});box.addEventListener('input',()=>{const q=box.value.trim().toLowerCase();const hits=new Set(index.filter(x=>!q||x.title.toLowerCase().includes(q)||x.path.toLowerCase().includes(q)||x.body.toLowerCase().includes(q)).map(x=>x.path));rows.forEach(row=>{const href=row.querySelector('a')?.getAttribute('href')||'';const path=new URL(href,location.href).pathname.split('/').pop();row.hidden=!!q&&!row.dataset.title.toLowerCase().includes(q)&&!hits.has(path)})})})();

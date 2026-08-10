@@ -57,6 +57,8 @@ test "site build emits pages, navigation, assets, and search" {
       match install {
         Some(file) => {
           assert_true(file.content.contains("href=\"../moonbook.css\""))
+          assert_true(file.content.contains("href=\"../README.html\""))
+          assert_false(file.content.contains("href=\"../README.md\""))
           assert_true(file.content.contains("测试书籍"))
           assert_true(file.content.contains("← 首页"))
         }
@@ -83,4 +85,26 @@ test "site build reports missing sources and links" {
     Err(error) => fail(error.to_string())
     Ok(output) => assert_eq(output.diagnostics.length(), 2)
   }
+}
+
+///|
+test "link checker validates local and cross-chapter anchors" {
+  let chapters = match
+    @moonbook.parse_summary("- [Home](README.md)\n- [Guide](guide.md)") {
+    Ok(items) => @moonbook.summary_chapters(items)
+    Err(error) => {
+      fail(error.to_string())
+      []
+    }
+  }
+  let sources = [
+    @moonbook.SourceFile::{
+      path: "README.md",
+      content: "# Home\n\n[ok](#home) [bad](#absent) [guide](guide.md#install)",
+    },
+    @moonbook.SourceFile::{ path: "guide.md", content: "# Install" },
+  ]
+  let diagnostics = @moonbook.check_links(chapters, sources)
+  assert_eq(diagnostics.length(), 1)
+  assert_true(diagnostics[0].message.contains("#absent"))
 }

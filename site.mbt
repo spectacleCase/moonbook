@@ -113,7 +113,10 @@ fn render_page(
   } else {
     "<span></span>"
   }
-  "<!doctype html><html lang=\"\{escape_html(config.language)}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>\{escape_html(chapter.title)} · \{escape_html(config.title)}</title><link rel=\"stylesheet\" href=\"\{root}moonbook.css\">\{extra_links(config.additional_css, root, "css")}</head><body><div class=\"layout\"><aside class=\"sidebar\">\{render_sidebar(config.title, items, chapter.output_path, root)}</aside><main class=\"content\"><div class=\"breadcrumbs\">\{escape_html(config.title)} / \{escape_html(chapter.title)}</div><article>\{body}</article><nav class=\"chapter-nav\">\{previous}\{next}</nav></main></div><script src=\"\{root}moonbook.js\"></script>\{extra_links(config.additional_js, root, "js")}</body></html>"
+  let linked_body = body
+    .replace(old=".md\"", new=".html\"")
+    .replace(old=".md#", new=".html#")
+  "<!doctype html><html lang=\"\{escape_html(config.language)}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>\{escape_html(chapter.title)} · \{escape_html(config.title)}</title><link rel=\"stylesheet\" href=\"\{root}moonbook.css\">\{extra_links(config.additional_css, root, "css")}</head><body><div class=\"layout\"><aside class=\"sidebar\">\{render_sidebar(config.title, items, chapter.output_path, root)}</aside><main class=\"content\"><div class=\"breadcrumbs\">\{escape_html(config.title)} / \{escape_html(chapter.title)}</div><article>\{linked_body}</article><nav class=\"chapter-nav\">\{previous}\{next}</nav></main></div><script src=\"\{root}moonbook.js\"></script>\{extra_links(config.additional_js, root, "js")}</body></html>"
 }
 
 ///|
@@ -133,6 +136,34 @@ fn markdown_links(source : String) -> Array[String] {
     pos = close + 1
   }
   links
+}
+
+///|
+fn target_parts(link : String) -> (String, String) {
+  let hash = find_text(link, "#", 0)
+  if hash < 0 {
+    (link, "")
+  } else {
+    (link[0:hash].to_owned(), link[hash + 1:].to_owned())
+  }
+}
+
+///|
+fn has_heading_anchor(source : String, anchor : String) -> Bool {
+  for raw_line in source.split("\n") {
+    let line = raw_line.trim().to_owned()
+    if line.has_prefix("#") {
+      let mut level = 0
+      while level < line.length() &&
+            line.code_unit_at(level).to_int() == '#'.to_int() {
+        level += 1
+      }
+      if slugify(line[level:].trim().to_owned()) == anchor {
+        return true
+      }
+    }
+  }
+  false
 }
 
 ///|
@@ -174,14 +205,21 @@ pub fn check_links(
         })
       Some(content) =>
         for link in markdown_links(content) {
-          let target = link.split("#").next().unwrap_or("").to_owned()
-          if target.is_empty() ||
-            target.has_prefix("http://") ||
+          let (target, anchor) = target_parts(link)
+          if target.has_prefix("http://") ||
             target.has_prefix("https://") ||
             target.has_prefix("mailto:") {
             continue
           }
-          if target.has_suffix(".md") {
+          if target.is_empty() {
+            if !anchor.is_empty() && !has_heading_anchor(content, anchor) {
+              diagnostics.push({
+                severity: "error",
+                path: chapter.source_path,
+                message: "当前章节锚点不存在：#\{anchor}",
+              })
+            }
+          } else if target.has_suffix(".md") {
             let normalized = normalize_link(chapter.source_path, target)
             if !known.contains(normalized) {
               diagnostics.push({
@@ -189,6 +227,18 @@ pub fn check_links(
                 path: chapter.source_path,
                 message: "内部章节链接不存在：\{target}",
               })
+            } else if !anchor.is_empty() {
+              match find_source(sources, normalized) {
+                Some(target_content) if !has_heading_anchor(
+                    target_content, anchor,
+                  ) =>
+                  diagnostics.push({
+                    severity: "error",
+                    path: chapter.source_path,
+                    message: "章节锚点不存在：\{link}",
+                  })
+                _ => ()
+              }
             }
           }
         }

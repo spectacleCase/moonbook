@@ -2,13 +2,84 @@
 package "spectacleCase/moonbook"
 
 // Values
-pub fn scaffold_status() -> String
+pub fn build_site(String, String, Array[SourceFile]) -> Result[BuildOutput, MoonBookError]
+
+pub fn check_links(Array[Chapter], Array[SourceFile]) -> Array[Diagnostic]
+
+pub fn default_config(String) -> String
+
+pub let default_theme_css : String
+
+pub let default_theme_js : String
+
+pub fn parse_config(String) -> BookConfig
+
+pub fn parse_summary(String) -> Result[Array[SummaryItem], MoonBookError]
+
+pub fn render_markdown(String) -> String
+
+pub fn summary_chapters(Array[SummaryItem]) -> Array[Chapter]
 
 pub let version : String
 
 // Errors
 
 // Types and methods
+pub(all) struct BookConfig {
+  mut title : String
+  mut authors : Array[String]
+  mut language : String
+  mut source_dir : String
+  mut build_dir : String
+  mut theme : String
+  mut additional_css : Array[String]
+  mut additional_js : Array[String]
+  mut search : Bool
+  mut incremental : Bool
+}
+pub fn BookConfig::default() -> Self
+
+pub(all) struct BuildOutput {
+  files : Array[GeneratedFile]
+  diagnostics : Array[Diagnostic]
+}
+
+pub(all) struct Chapter {
+  title : String
+  source_path : String
+  output_path : String
+  level : Int
+  number : String
+}
+
+pub(all) struct Diagnostic {
+  severity : String
+  path : String
+  message : String
+}
+
+pub(all) struct GeneratedFile {
+  path : String
+  content : String
+}
+
+pub(all) struct MoonBookError {
+  kind : String
+  line : Int
+  message : String
+}
+pub impl Show for MoonBookError
+
+pub(all) struct SourceFile {
+  path : String
+  content : String
+}
+
+pub(all) enum SummaryItem {
+  Chapter(Chapter)
+  PartTitle(String)
+  Separator
+}
 
 // Type aliases
 
