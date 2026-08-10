@@ -126,3 +126,10 @@ test "link checker ignores examples inside fenced code" {
   ]
   assert_eq(@moonbook.check_links(chapters, sources).length(), 0)
 }
+
+///|
+test "default theme provides accessible code copy controls" {
+  assert_true(@moonbook.default_theme_js.contains("navigator.clipboard"))
+  assert_true(@moonbook.default_theme_js.contains("复制代码"))
+  assert_true(@moonbook.default_theme_css.contains(".copy-code"))
+}
