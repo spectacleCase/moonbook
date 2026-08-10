@@ -1,7 +1,12 @@
 import {
   "spectacleCase/moonbook",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/env",
+  "moonbitlang/core/string",
 }
 
 options(
   "is-main": true,
+  "native-stub": [ "runtime.c" ],
+  targets: { "runtime.mbt": [ "native" ], "main.mbt": [ "native" ] },
 )
