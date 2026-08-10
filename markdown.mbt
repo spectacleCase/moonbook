@@ -59,6 +59,45 @@ fn inline_markdown(source : String) -> String {
         continue
       }
     }
+    if pos + 1 < source.length() && source[pos:pos + 2].to_owned() == "~~" {
+      let close = find_text(source, "~~", pos + 2)
+      if close > pos {
+        out.write_string("<del>")
+        out.write_string(inline_markdown(source[pos + 2:close].to_owned()))
+        out.write_string("</del>")
+        pos = close + 2
+        continue
+      }
+    }
+    if pos + 1 < source.length() && source[pos:pos + 2].to_owned() == "==" {
+      let close = find_text(source, "==", pos + 2)
+      if close > pos {
+        out.write_string("<mark>")
+        out.write_string(inline_markdown(source[pos + 2:close].to_owned()))
+        out.write_string("</mark>")
+        pos = close + 2
+        continue
+      }
+    }
+    if pos + 1 < source.length() && source[pos:pos + 2].to_owned() == "![" {
+      let middle = find_text(source, "](", pos + 2)
+      let close = if middle >= 0 {
+        find_text(source, ")", middle + 2)
+      } else {
+        -1
+      }
+      if middle > pos && close > middle {
+        let alt = source[pos + 2:middle].to_owned()
+        let src = source[middle + 2:close].to_owned()
+        out.write_string("<img src=\"")
+        out.write_string(escape_html(src))
+        out.write_string("\" alt=\"")
+        out.write_string(escape_html(alt))
+        out.write_string("\" loading=\"lazy\">")
+        pos = close + 1
+        continue
+      }
+    }
     if source.code_unit_at(pos).to_int() == '['.to_int() {
       let middle = find_text(source, "](", pos + 1)
       let close = if middle >= 0 {
@@ -78,6 +117,31 @@ fn inline_markdown(source : String) -> String {
         continue
       }
     }
+    if source.code_unit_at(pos).to_int() == '*'.to_int() {
+      let close = find_text(source, "*", pos + 1)
+      if close > pos + 1 {
+        out.write_string("<em>")
+        out.write_string(inline_markdown(source[pos + 1:close].to_owned()))
+        out.write_string("</em>")
+        pos = close + 1
+        continue
+      }
+    }
+    if source.code_unit_at(pos).to_int() == '<'.to_int() {
+      let close = find_text(source, ">", pos + 1)
+      if close > pos {
+        let url = source[pos + 1:close].to_owned()
+        if url.has_prefix("https://") || url.has_prefix("http://") {
+          out.write_string("<a href=\"")
+          out.write_string(escape_html(url))
+          out.write_string("\">")
+          out.write_string(escape_html(url))
+          out.write_string("</a>")
+          pos = close + 1
+          continue
+        }
+      }
+    }
     let ch = Int::unsafe_to_char(source.code_unit_at(pos).to_int())
     match ch {
       '&' => out.write_string("&amp;")
@@ -88,6 +152,26 @@ fn inline_markdown(source : String) -> String {
     pos += 1
   }
   out.to_string()
+}
+
+///|
+fn ordered_item(line : String) -> String? {
+  let mut pos = 0
+  while pos < line.length() {
+    let ch = Int::unsafe_to_char(line.code_unit_at(pos).to_int())
+    if ch < '0' || ch > '9' {
+      break
+    }
+    pos += 1
+  }
+  if pos > 0 &&
+    pos + 1 < line.length() &&
+    line.code_unit_at(pos).to_int() == '.'.to_int() &&
+    line.code_unit_at(pos + 1).to_int() == ' '.to_int() {
+    Some(line[pos + 2:].to_owned())
+  } else {
+    None
+  }
 }
 
 ///|
@@ -139,6 +223,7 @@ pub fn render_markdown(source : String) -> String {
   let mut in_code = false
   let mut code_language = ""
   let mut in_list = false
+  let mut ordered_list = false
   while i < lines.length() {
     let line = lines[i]
     let trimmed = line.trim().to_owned()
@@ -148,7 +233,7 @@ pub fn render_markdown(source : String) -> String {
         in_code = false
       } else {
         if in_list {
-          out.write_string("</ul>\n")
+          out.write_string(if ordered_list { "</ol>\n" } else { "</ul>\n" })
           in_list = false
         }
         code_language = trimmed[3:].trim().to_owned()
@@ -172,7 +257,7 @@ pub fn render_markdown(source : String) -> String {
       trimmed.contains("|") &&
       is_table_rule(lines[i + 1]) {
       if in_list {
-        out.write_string("</ul>\n")
+        out.write_string(if ordered_list { "</ol>\n" } else { "</ul>\n" })
         in_list = false
       }
       out.write_string("<div class=\"table-wrap\"><table><thead>")
@@ -188,12 +273,23 @@ pub fn render_markdown(source : String) -> String {
       out.write_string("</tbody></table></div>\n")
       continue
     }
-    if trimmed.has_prefix("- ") || trimmed.has_prefix("* ") {
+    let numbered = ordered_item(trimmed)
+    let unordered = trimmed.has_prefix("- ") || trimmed.has_prefix("* ")
+    if unordered || numbered is Some(_) {
+      let wants_ordered = numbered is Some(_)
+      if in_list && wants_ordered != ordered_list {
+        out.write_string(if ordered_list { "</ol>\n" } else { "</ul>\n" })
+        in_list = false
+      }
       if !in_list {
-        out.write_string("<ul>\n")
+        ordered_list = wants_ordered
+        out.write_string(if ordered_list { "<ol>\n" } else { "<ul>\n" })
         in_list = true
       }
-      let mut item = trimmed[2:].to_owned()
+      let mut item = match numbered {
+        Some(content) => content
+        None => trimmed[2:].to_owned()
+      }
       let mut checkbox = ""
       if item.has_prefix("[ ] ") {
         checkbox = "<input type=\"checkbox\" disabled> "
@@ -207,7 +303,7 @@ pub fn render_markdown(source : String) -> String {
       continue
     }
     if in_list {
-      out.write_string("</ul>\n")
+      out.write_string(if ordered_list { "</ol>\n" } else { "</ul>\n" })
       in_list = false
     }
     if trimmed.is_empty() {
@@ -226,6 +322,22 @@ pub fn render_markdown(source : String) -> String {
       out.write_string(
         "<h\{level} id=\"\{escape_html(slug)}\"><a class=\"anchor\" href=\"#\{escape_html(slug)}\">#</a>\{inline_markdown(title)}</h\{level}>\n",
       )
+    } else if trimmed.has_prefix("> [!") && trimmed.has_suffix("]") {
+      let kind = trimmed[4:trimmed.length() - 1].to_lower().to_owned()
+      let title = kind.to_upper()
+      out.write_string(
+        "<aside class=\"callout callout-\{escape_html(kind)}\"><strong>\{escape_html(title)}</strong>",
+      )
+      i += 1
+      while i < lines.length() && lines[i].trim().has_prefix(">") {
+        let content = lines[i].trim()[1:].trim().to_owned()
+        if !content.is_empty() {
+          out.write_string("<p>\{inline_markdown(content)}</p>")
+        }
+        i += 1
+      }
+      out.write_string("</aside>\n")
+      continue
     } else if trimmed.has_prefix("> ") {
       out.write_string(
         "<blockquote><p>\{inline_markdown(trimmed[2:].to_owned())}</p></blockquote>\n",
@@ -241,7 +353,7 @@ pub fn render_markdown(source : String) -> String {
     out.write_string("</code></pre>\n")
   }
   if in_list {
-    out.write_string("</ul>\n")
+    out.write_string(if ordered_list { "</ol>\n" } else { "</ul>\n" })
   }
   out.to_string()
 }

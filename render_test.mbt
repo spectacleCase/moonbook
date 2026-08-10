@@ -133,3 +133,27 @@ test "default theme provides accessible code copy controls" {
   assert_true(@moonbook.default_theme_js.contains("复制代码"))
   assert_true(@moonbook.default_theme_css.contains(".copy-code"))
 }
+
+///|
+test "markdown renders extended inline and block styles" {
+  let html = @moonbook.render_markdown(
+    (
+      #|Text with *emphasis*, ~~removed~~, ==highlighted== and <https://moonbitlang.com>.
+      #|
+      #|![MoonBook cover](cover.png)
+      #|
+      #|1. First
+      #|2. Second
+      #|
+      #|> [!TIP]
+      #|> Run check before build.
+    ),
+  )
+  assert_true(html.contains("<em>emphasis</em>"))
+  assert_true(html.contains("<del>removed</del>"))
+  assert_true(html.contains("<mark>highlighted</mark>"))
+  assert_true(html.contains("<a href=\"https://moonbitlang.com\""))
+  assert_true(html.contains("<img src=\"cover.png\""))
+  assert_true(html.contains("<ol>"))
+  assert_true(html.contains("callout-tip"))
+}
