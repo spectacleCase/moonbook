@@ -54,6 +54,6 @@ test "summary supports groups, nesting, and separators" {
 
 ///|
 test "summary rejects unsafe and duplicate paths" {
-  assert_true(@moonbook.parse_summary("- [Bad](../secret.md)").is_err())
-  assert_true(@moonbook.parse_summary("- [A](a.md)\n- [Again](a.md)").is_err())
+  assert_true(@moonbook.parse_summary("- [Bad](../secret.md)") is Err(_))
+  assert_true(@moonbook.parse_summary("- [A](a.md)\n- [Again](a.md)") is Err(_))
 }
