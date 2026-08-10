@@ -42,6 +42,13 @@ jobs:
       - name: Test
         run: moon test --target all
 
+      - name: Build native CLI
+        run: moon build --target native
+
+      - name: Build example book
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: moon run --target native cmd/main -- build examples/basic
+
       - name: Verify formatting and interfaces
         shell: bash
         run: |

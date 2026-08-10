@@ -1,78 +1,133 @@
 # MoonBook
 
-MoonBook 是一个计划使用 MoonBit 实现的 Markdown 文档站与在线书籍生成器，参考 Rust 生态的 [mdBook](https://github.com/rust-lang/mdBook)。项目希望为 MoonBit 库、工具链、教程和开源项目提供轻量、可移植的静态文档生成能力。
+MoonBook 是一个使用 MoonBit 编写的 Markdown 文档站与在线书籍生成器，参考 [mdBook](https://github.com/rust-lang/mdBook) 的文档组织方式。它读取 `moonbook.toml` 和 `SUMMARY.md`，生成可直接部署的 HTML、CSS、JavaScript 与搜索索引。
 
-> 当前状态：项目仅完成申报阶段的工程初始化，文档构建功能尚未实现。通过比赛初审后再进入正式开发。
+当前版本已经提供可工作的 `init`、`build`、`check` 和 `serve` 命令，以及配置、目录、Markdown 渲染、页面生成、搜索与链接检查 API。
 
-## 项目定位
+## 功能
 
-MoonBook 计划读取由 Markdown 文件组成的文档目录，根据 `SUMMARY.md` 生成章节结构、导航关系和静态 HTML 页面。生成结果不依赖服务端运行环境，可以部署到 GitHub Pages、静态文件服务器或对象存储。
+- 使用 `SUMMARY.md` 管理章节、嵌套章节、分组标题和分隔项；
+- 支持标题锚点、代码块、表格、任务列表、引用、链接、粗体与行内代码；
+- 生成响应式侧边栏、面包屑和前后章导航；
+- 输出静态全文搜索索引，并提供章节标题即时筛选；
+- 检查缺失章节、不安全路径、重复章节和内部 Markdown 链接；
+- 支持附加 CSS、JavaScript 和中文内容；
+- 内容未变化时跳过文件写入，提供基础增量构建；
+- 提供只监听 `127.0.0.1` 的开发预览服务器。
 
-项目不会重新实现完整 Markdown 标准，而是优先复用 MoonBit 生态中已有的 Markdown、HTML、HTTP 和文件系统能力，重点实现文档工程组织、构建流程、主题系统、搜索索引和本地预览服务。
+## 快速开始
 
-## 计划功能
-
-- `moonbook init`：创建文档项目、配置文件、章节目录和示例页面；
-- `moonbook build`：读取配置与章节文件，生成完整静态网站；
-- `moonbook serve`：启动本地预览服务；
-- 使用 `SUMMARY.md` 描述章节、分组和嵌套目录；
-- 支持上一页、下一页、侧边栏、面包屑和章节锚点；
-- 支持主题、附加 CSS、JavaScript 和静态资源复制；
-- 生成客户端全文搜索索引；
-- 检查章节路径、内部链接和资源引用；
-- 支持代码块、表格、任务列表等常用 Markdown 内容；
-- 提供配置解析、章节模型、构建器和渲染器的 MoonBit API；
-- 提供示例文档、自动化测试、CI 和发布说明。
-
-## 暂不包含
-
-- PDF、EPUB 等排版输出；
-- 与 mdBook 完全兼容的第三方预处理器生态；
-- 在线协作编辑、账号和权限系统；
-- 云端托管平台或内容管理系统。
-
-## 当前工程
-
-当前仓库提供可构建的 MoonBit 模块、CLI 入口、基础测试和项目申报材料。
+MoonBook CLI 当前使用 Native 后端：
 
 ```bash
-moon check
-moon test
-moon run cmd/main
+moon run --target native cmd/main -- init my-book
+moon run --target native cmd/main -- build my-book
+moon run --target native cmd/main -- serve my-book 3000
 ```
 
-预期输出：
+初始化后的目录如下：
 
 ```text
-MoonBook v0.1.0
-项目骨架已初始化，文档构建功能将在项目通过初审后开发。
+my-book/
+├── moonbook.toml
+└── src/
+    ├── SUMMARY.md
+    ├── README.md
+    └── getting-started.md
 ```
 
-## 计划目录
+构建结果默认写入 `book/`。该目录可以直接部署到 GitHub Pages、对象存储或任意静态文件服务器。
+
+## 命令
 
 ```text
-moonbook/
-├── cmd/main/          # MoonBook CLI
-├── config/            # 配置模型与解析
-├── book/              # 章节、目录与文档模型
-├── renderer/          # HTML 页面和主题渲染
-├── search/            # 搜索索引生成
-├── server/            # 本地预览服务
-├── examples/          # 可实际构建的示例文档
-└── PROJECT_APPLICATION.md
+moonbook init  [目录]          初始化书籍工程，不覆盖已有文件
+moonbook build [目录]          检查并生成静态站点
+moonbook check [目录]          只检查，不写入构建结果
+moonbook serve [目录] [端口]   构建并启动本地预览，默认端口 3000
 ```
 
-目录会随正式开发逐步建立，当前不会提前创建空包。
+省略目录时使用当前目录。`serve` 是开发工具，不应作为生产服务器使用。
+
+## 配置
+
+```toml
+[book]
+title = "MoonBit 学习指南"
+authors = ["作者"]
+language = "zh-CN"
+src = "src"
+
+[build]
+build-dir = "book"
+incremental = true
+
+[output.html]
+theme = "light"
+additional-css = ["theme/custom.css"]
+additional-js = ["theme/custom.js"]
+
+[output.html.search]
+enable = true
+```
+
+附加资源路径相对于项目根目录，构建时会复制到输出目录并写入页面引用。
+
+## 目录语法
+
+```markdown
+# Summary
+
+# 第一部分
+- [简介](README.md)
+  - [安装](guide/install.md)
+---
+- [附录](appendix.md)
+```
+
+章节必须使用安全的 `.md` 相对路径。绝对路径、包含 `..` 越界的路径和重复路径会被拒绝。
+
+## MoonBit API
+
+核心逻辑不依赖文件系统，可直接从其他 MoonBit 包调用：
+
+```moonbit nocheck
+///|
+let config = @moonbook.parse_config(config_text)
+
+///|
+let items = @moonbook.parse_summary(summary_text)
+
+///|
+let html = @moonbook.render_markdown("# Hello")
+
+///|
+let output = @moonbook.build_site(config_text, summary_text, sources)
+```
+
+主要公开类型包括 `BookConfig`、`Chapter`、`SummaryItem`、`SourceFile`、`GeneratedFile`、`Diagnostic` 和 `BuildOutput`。
+
+## 开发与验证
+
+```bash
+moon fmt
+moon check --target all
+moon test --target all
+moon build --target native
+moon info
+```
+
+`examples/basic` 提供一个多层中文示例。测试覆盖配置、目录、安全路径、Markdown 转义、表格、任务列表、导航、搜索、链接诊断和内存端到端构建。
+
+## 范围说明
+
+MoonBook 首版面向常见技术文档，不宣称完整兼容 CommonMark 或 mdBook。暂不包含 PDF/EPUB 输出、第三方预处理器协议、在线协作和生产级 Web 服务。Markdown 原始 HTML 会被转义，以降低生成不可信文档时的风险。
 
 ## 移植与许可证
 
 - 参考项目：mdBook
-- 原项目地址：https://github.com/rust-lang/mdBook
+- 原项目：https://github.com/rust-lang/mdBook
 - 原项目许可证：Mozilla Public License 2.0
-- 本项目许可证：Mozilla Public License 2.0
+- MoonBook 许可证：Mozilla Public License 2.0
 
-MoonBook 将采用 MoonBit 原生包结构、类型系统和测试方式重新组织实现，不复刻 Rust crate 结构。后续使用或移植上游代码时会保留必要的版权、许可证和来源说明。
-
-## 许可证
-
-MPL-2.0
+MoonBook 使用 MoonBit 原生数据模型和测试方式重新实现核心流程，没有复制 Rust crate 结构。平台文件与 socket 操作由最小 C 绑定提供，解析、检查、构建和渲染逻辑使用 MoonBit 实现。

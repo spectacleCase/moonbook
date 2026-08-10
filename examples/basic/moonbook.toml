@@ -1,0 +1,17 @@
+[book]
+title = "MoonBook 示例"
+authors = ["MoonBook Contributors"]
+language = "zh-CN"
+src = "src"
+
+[build]
+build-dir = "book"
+incremental = true
+
+[output.html]
+theme = "light"
+additional-css = []
+additional-js = []
+
+[output.html.search]
+enable = true
