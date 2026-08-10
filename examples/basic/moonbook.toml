@@ -10,7 +10,7 @@ incremental = true
 
 [output.html]
 theme = "light"
-additional-css = []
+additional-css = ["theme/custom.css"]
 additional-js = []
 
 [output.html.search]

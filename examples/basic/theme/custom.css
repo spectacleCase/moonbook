@@ -1,0 +1,17 @@
+.brand::after {
+  content: "DEMO";
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #b5462d;
+  color: white;
+  font: 700 10px sans-serif;
+  letter-spacing: .08em;
+  vertical-align: middle;
+}
+
+.content article > h1:first-child {
+  padding-bottom: 18px;
+  border-bottom: 3px double var(--line);
+}

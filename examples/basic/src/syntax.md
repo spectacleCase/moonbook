@@ -1,4 +1,4 @@
-# 语法示例
+# Markdown 展示
 
 > MoonBook 面向常见技术文档提供安全的 Markdown 子集。
 
@@ -13,3 +13,27 @@
 - [ ] 部署站点
 
 行内支持 **粗体**、`代码` 和[内部链接](README.md)。
+
+## 引用
+
+> 好文档不只是 API 清单，也应该解释边界、取舍和可以运行的例子。
+
+## MoonBit 代码
+
+```moonbit
+pub fn greeting(name : String) -> String {
+  "Hello, \{name}!"
+}
+
+test "greeting" {
+  assert_eq(greeting("MoonBit"), "Hello, MoonBit!")
+}
+```
+
+## HTML 转义
+
+代码块中的 `<script>` 会显示为文本，不会作为页面脚本执行。
+
+---
+
+需要自定义视觉效果时，可以继续阅读[配置参考](reference/config.md)。
