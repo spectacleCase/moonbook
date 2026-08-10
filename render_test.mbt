@@ -108,3 +108,21 @@ test "link checker validates local and cross-chapter anchors" {
   assert_eq(diagnostics.length(), 1)
   assert_true(diagnostics[0].message.contains("#absent"))
 }
+
+///|
+test "link checker ignores examples inside fenced code" {
+  let chapters = match @moonbook.parse_summary("- [Home](README.md)") {
+    Ok(items) => @moonbook.summary_chapters(items)
+    Err(error) => {
+      fail(error.to_string())
+      []
+    }
+  }
+  let sources = [
+    @moonbook.SourceFile::{
+      path: "README.md",
+      content: "```markdown\n[example](not-a-real-page.md)\n```",
+    },
+  ]
+  assert_eq(@moonbook.check_links(chapters, sources).length(), 0)
+}

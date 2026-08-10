@@ -122,18 +122,29 @@ fn render_page(
 ///|
 fn markdown_links(source : String) -> Array[String] {
   let links : Array[String] = []
-  let mut pos = 0
-  while pos < source.length() {
-    let middle = find_text(source, "](", pos)
-    if middle < 0 {
-      break
+  let mut in_code = false
+  for raw_line in source.split("\n") {
+    let line = raw_line.to_owned()
+    if line.trim().has_prefix("```") {
+      in_code = !in_code
+      continue
     }
-    let close = find_text(source, ")", middle + 2)
-    if close < 0 {
-      break
+    if in_code {
+      continue
     }
-    links.push(source[middle + 2:close].to_owned())
-    pos = close + 1
+    let mut pos = 0
+    while pos < line.length() {
+      let middle = find_text(line, "](", pos)
+      if middle < 0 {
+        break
+      }
+      let close = find_text(line, ")", middle + 2)
+      if close < 0 {
+        break
+      }
+      links.push(line[middle + 2:close].to_owned())
+      pos = close + 1
+    }
   }
   links
 }
