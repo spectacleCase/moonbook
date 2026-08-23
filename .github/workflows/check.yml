@@ -67,7 +67,8 @@ jobs:
             exit 1
           fi
 
-      - name: Verify formatting and interfaces
-        run: |
-          moon fmt --check
-          moon info
+      - name: Verify formatting
+        run: moon fmt --check
+
+      - name: Verify interfaces
+        run: moon info
