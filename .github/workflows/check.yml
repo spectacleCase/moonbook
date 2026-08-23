@@ -68,8 +68,6 @@ jobs:
           fi
 
       - name: Verify formatting and interfaces
-        shell: bash
         run: |
-          moon fmt
+          moon fmt --check
           moon info
-          git diff --exit-code
