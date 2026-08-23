@@ -66,6 +66,11 @@ pub fn parse_config(source : String) -> BookConfig {
       ("build", "incremental") =>
         config.incremental = parse_bool(value, config.incremental)
       ("output.html", "theme") => config.theme = unquote(value)
+      ("output.html", "template") => {
+        let path = unquote(value)
+        config.template = if path.is_empty() { None } else { Some(path) }
+      }
+      ("output.html", "static-dir") => config.static_dir = unquote(value)
       ("output.html", "additional-css") =>
         config.additional_css = parse_string_array(value)
       ("output.html", "additional-js") =>
@@ -80,5 +85,104 @@ pub fn parse_config(source : String) -> BookConfig {
 
 ///|
 pub fn default_config(title : String) -> String {
-  "[book]\ntitle = \"\{title}\"\nauthors = []\nlanguage = \"zh-CN\"\nsrc = \"src\"\n\n[build]\nbuild-dir = \"book\"\nincremental = true\n\n[output.html]\ntheme = \"light\"\nadditional-css = []\nadditional-js = []\n\n[output.html.search]\nenable = true\n"
+  "[book]\ntitle = \"\{title}\"\nauthors = []\nlanguage = \"zh-CN\"\nsrc = \"src\"\n\n[build]\nbuild-dir = \"book\"\nincremental = true\n\n[output.html]\ntheme = \"light\"\ntemplate = \"\"\nstatic-dir = \"static\"\nadditional-css = []\nadditional-js = []\n\n[output.html.search]\nenable = true\n"
+}
+
+///|
+fn known_config_key(section : String, key : String) -> Bool {
+  match (section, key) {
+    ("book", "title" | "authors" | "language" | "src") => true
+    ("build", "build-dir" | "incremental") => true
+    (
+      "output.html",
+      "theme"
+      | "template"
+      | "static-dir"
+      | "additional-css"
+      | "additional-js",
+    ) => true
+    ("output.html.search", "enable") => true
+    _ => false
+  }
+}
+
+///|
+/// Validate recognized configuration and report ignored or malformed values.
+pub fn validate_config(source : String) -> Array[Diagnostic] {
+  let diagnostics : Array[Diagnostic] = []
+  let mut section = ""
+  let mut line_number = 0
+  for raw_line in source.split("\n") {
+    line_number += 1
+    let line = raw_line.trim().to_owned()
+    if line.is_empty() || line.has_prefix("#") {
+      continue
+    }
+    if line.has_prefix("[") && line.has_suffix("]") {
+      section = line[1:line.length() - 1].to_owned()
+      if section != "book" &&
+        section != "build" &&
+        section != "output.html" &&
+        section != "output.html.search" {
+        diagnostics.push({
+          severity: "warning",
+          path: "moonbook.toml",
+          message: "第 \{line_number} 行：未知配置段 [\{section}]",
+        })
+      }
+      continue
+    }
+    let equal = find_text(line, "=", 0)
+    if equal < 0 {
+      diagnostics.push({
+        severity: "error",
+        path: "moonbook.toml",
+        message: "第 \{line_number} 行：缺少 =",
+      })
+      continue
+    }
+    let key = line[0:equal].trim().to_owned()
+    let value = line[equal + 1:].trim().to_owned()
+    if !known_config_key(section, key) {
+      diagnostics.push({
+        severity: "warning",
+        path: "moonbook.toml",
+        message: "第 \{line_number} 行：未知配置项 \{section}.\{key}",
+      })
+    }
+    if (key == "incremental" || key == "enable") &&
+      value != "true" &&
+      value != "false" {
+      diagnostics.push({
+        severity: "error",
+        path: "moonbook.toml",
+        message: "第 \{line_number} 行：\{key} 必须是 true 或 false",
+      })
+    }
+    if (key == "authors" || key == "additional-css" || key == "additional-js") &&
+      (!value.has_prefix("[") || !value.has_suffix("]")) {
+      diagnostics.push({
+        severity: "error",
+        path: "moonbook.toml",
+        message: "第 \{line_number} 行：\{key} 必须是字符串数组",
+      })
+    }
+  }
+  diagnostics
+}
+
+///|
+pub fn parse_book(
+  config_text : String,
+  summary_text : String,
+) -> Result[Book, MoonBookError] {
+  match parse_summary(summary_text) {
+    Err(error) => Err(error)
+    Ok(summary) =>
+      Ok({
+        config: parse_config(config_text),
+        chapters: summary_chapters(summary),
+        summary,
+      })
+  }
 }

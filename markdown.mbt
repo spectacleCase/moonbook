@@ -35,6 +35,34 @@ fn slugify(title : String) -> String {
 }
 
 ///|
+/// Extract level 2-4 headings for the page-local table of contents.
+pub fn extract_sections(source : String) -> Array[Section] {
+  let sections : Array[Section] = []
+  let mut in_code = false
+  for raw_line in source.split("\n") {
+    let line = raw_line.trim().to_owned()
+    if line.has_prefix("```") {
+      in_code = !in_code
+      continue
+    }
+    if in_code || !line.has_prefix("#") {
+      continue
+    }
+    let mut level = 0
+    while level < line.length() &&
+          level < 6 &&
+          line.code_unit_at(level).to_int() == '#'.to_int() {
+      level += 1
+    }
+    if level >= 2 && level <= 4 {
+      let title = line[level:].trim().to_owned()
+      sections.push({ title, id: slugify(title), level })
+    }
+  }
+  sections
+}
+
+///|
 fn inline_markdown(source : String) -> String {
   let out = StringBuilder::new()
   let mut pos = 0

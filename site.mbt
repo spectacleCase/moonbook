@@ -94,12 +94,76 @@ fn extra_links(paths : Array[String], root : String, kind : String) -> String {
 }
 
 ///|
+fn author_text(authors : Array[String]) -> String {
+  let out = StringBuilder::new()
+  for index, author in authors {
+    if index > 0 {
+      out.write_string("、")
+    }
+    out.write_string(author)
+  }
+  out.to_string()
+}
+
+///|
+fn render_page_toc(sections : Array[Section]) -> String {
+  if sections.is_empty() {
+    return ""
+  }
+  let out = StringBuilder::new()
+  out.write_string(
+    "<nav class=\"page-toc\" aria-label=\"本页目录\"><strong>本页目录</strong><ol>",
+  )
+  for section in sections {
+    out.write_string(
+      "<li style=\"padding-left:\{(section.level - 2) * 14}px\"><a href=\"#\{escape_html(section.id)}\">\{escape_html(section.title)}</a></li>",
+    )
+  }
+  out.write_string("</ol></nav>")
+  out.to_string()
+}
+
+///|
+fn apply_page_template(
+  template : String,
+  language : String,
+  page_title : String,
+  book_title : String,
+  head : String,
+  sidebar : String,
+  breadcrumbs : String,
+  toc : String,
+  content : String,
+  navigation : String,
+  authors : String,
+  scripts : String,
+) -> String {
+  template
+  .replace(old="{{language}}", new=language)
+  .replace(old="{{page_title}}", new=page_title)
+  .replace(old="{{book_title}}", new=book_title)
+  .replace(old="{{head}}", new=head)
+  .replace(old="{{sidebar}}", new=sidebar)
+  .replace(old="{{breadcrumbs}}", new=breadcrumbs)
+  .replace(old="{{toc}}", new=toc)
+  .replace(old="{{content}}", new=content)
+  .replace(old="{{navigation}}", new=navigation)
+  .replace(old="{{authors}}", new=authors)
+  .replace(old="{{scripts}}", new=scripts)
+}
+
+///|
+pub let default_page_template : String = "<!doctype html><html lang=\"{{language}}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{{page_title}} · {{book_title}}</title>{{head}}</head><body><div class=\"layout\"><aside class=\"sidebar\">{{sidebar}}</aside><main class=\"content\"><div class=\"breadcrumbs\">{{breadcrumbs}}</div>{{toc}}<article>{{content}}</article><div class=\"authors\">{{authors}}</div><nav class=\"chapter-nav\">{{navigation}}</nav></main></div>{{scripts}}</body></html>"
+
+///|
 fn render_page(
   config : BookConfig,
   items : Array[SummaryItem],
   chapters : Array[Chapter],
   index : Int,
   body : String,
+  source : String,
+  template : String?,
 ) -> String {
   let chapter = chapters[index]
   let root = relative_root(chapter.output_path)
@@ -116,7 +180,26 @@ fn render_page(
   let linked_body = body
     .replace(old=".md\"", new=".html\"")
     .replace(old=".md#", new=".html#")
-  "<!doctype html><html lang=\"\{escape_html(config.language)}\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>\{escape_html(chapter.title)} · \{escape_html(config.title)}</title><link rel=\"stylesheet\" href=\"\{root}moonbook.css\">\{extra_links(config.additional_css, root, "css")}</head><body><div class=\"layout\"><aside class=\"sidebar\">\{render_sidebar(config.title, items, chapter.output_path, root)}</aside><main class=\"content\"><div class=\"breadcrumbs\">\{escape_html(config.title)} / \{escape_html(chapter.title)}</div><article>\{linked_body}</article><nav class=\"chapter-nav\">\{previous}\{next}</nav></main></div><script src=\"\{root}moonbook.js\"></script>\{extra_links(config.additional_js, root, "js")}</body></html>"
+  let authors = author_text(config.authors)
+  let author_html = if authors.is_empty() {
+    ""
+  } else {
+    "作者：\{escape_html(authors)}"
+  }
+  apply_page_template(
+    template.unwrap_or(default_page_template),
+    escape_html(config.language),
+    escape_html(chapter.title),
+    escape_html(config.title),
+    "<link rel=\"stylesheet\" href=\"\{root}moonbook.css\">\{extra_links(config.additional_css, root, "css")}",
+    render_sidebar(config.title, items, chapter.output_path, root),
+    "\{escape_html(config.title)} / \{escape_html(chapter.title)}",
+    render_page_toc(extract_sections(source)),
+    linked_body,
+    previous + next,
+    author_html,
+    "<script src=\"\{root}moonbook.js\"></script>\{extra_links(config.additional_js, root, "js")}",
+  )
 }
 
 ///|
@@ -193,6 +276,32 @@ fn normalize_link(source_path : String, target : String) -> String {
     base = if parent >= 0 { clean_base[0:parent + 1].to_owned() } else { "" }
   }
   base + rest.trim_start(chars="./").to_owned()
+}
+
+///|
+/// Return local non-Markdown resources referenced by a chapter.
+pub fn referenced_assets(
+  source_path : String,
+  content : String,
+) -> Array[String] {
+  let assets : Array[String] = []
+  for link in markdown_links(content) {
+    let (target, _) = target_parts(link)
+    if target.is_empty() ||
+      target.has_suffix(".md") ||
+      target.has_prefix("http://") ||
+      target.has_prefix("https://") ||
+      target.has_prefix("mailto:") ||
+      target.has_prefix("data:") {
+      continue
+    }
+    if target.has_prefix("/") {
+      assets.push(target)
+    } else {
+      assets.push(normalize_link(source_path, target))
+    }
+  }
+  assets
 }
 
 ///|
@@ -282,11 +391,35 @@ fn search_index(
 }
 
 ///|
-/// Build a complete static book from in-memory inputs.
-pub fn build_site(
+pub fn generate_search_index(
+  chapters : Array[Chapter],
+  sources : Array[SourceFile],
+) -> String {
+  search_index(chapters, sources)
+}
+
+///|
+fn needs_generation(
+  context : BuildContext,
+  path : String,
+  signature : String,
+) -> Bool {
+  if context.force {
+    return true
+  }
+  match context.previous_hashes.get(path) {
+    Some(previous) => previous != signature
+    None => true
+  }
+}
+
+///|
+/// Build a static book and skip rendering outputs whose input signature is unchanged.
+pub fn build_site_with_context(
   config_text : String,
   summary_text : String,
   sources : Array[SourceFile],
+  context : BuildContext,
 ) -> Result[BuildOutput, MoonBookError] {
   let config = parse_config(config_text)
   match parse_summary(summary_text) {
@@ -294,33 +427,96 @@ pub fn build_site(
     Ok(items) => {
       let chapters = summary_chapters(items)
       let diagnostics = check_links(chapters, sources)
-      let files : Array[GeneratedFile] = [
-        { path: "moonbook.css", content: default_theme_css },
-        { path: "moonbook.js", content: default_theme_js },
-      ]
+      for diagnostic in validate_config(config_text) {
+        diagnostics.push(diagnostic)
+      }
+      let css = match theme_css(config.theme) {
+        Some(value) => value
+        None => {
+          diagnostics.push({
+            severity: "error",
+            path: "moonbook.toml",
+            message: "未知主题：\{config.theme}，可用主题为 light、rust、coal",
+          })
+          default_theme_css
+        }
+      }
+      let files : Array[GeneratedFile] = []
+      let hashes : Map[String, String] = Map([], capacity=chapters.length() + 3)
+      let mut skipped = 0
+      let css_hash = content_hash(css)
+      hashes["moonbook.css"] = css_hash
+      if needs_generation(context, "moonbook.css", css_hash) {
+        files.push({ path: "moonbook.css", content: css })
+      } else {
+        skipped += 1
+      }
+      let js_hash = content_hash(default_theme_js)
+      hashes["moonbook.js"] = js_hash
+      if needs_generation(context, "moonbook.js", js_hash) {
+        files.push({ path: "moonbook.js", content: default_theme_js })
+      } else {
+        skipped += 1
+      }
       for i, chapter in chapters {
         match find_source(sources, chapter.source_path) {
-          Some(content) =>
-            files.push({
-              path: chapter.output_path,
-              content: render_page(
-                config,
-                items,
-                chapters,
-                i,
-                render_markdown(content),
-              ),
-            })
+          Some(content) => {
+            let signature = content_hash(
+              config_text +
+              "\n" +
+              summary_text +
+              "\n" +
+              content +
+              "\n" +
+              context.template.unwrap_or(""),
+            )
+            hashes[chapter.output_path] = signature
+            if needs_generation(context, chapter.output_path, signature) {
+              files.push({
+                path: chapter.output_path,
+                content: render_page(
+                  config,
+                  items,
+                  chapters,
+                  i,
+                  render_markdown(content),
+                  content,
+                  context.template,
+                ),
+              })
+            } else {
+              skipped += 1
+            }
+          }
           None => ()
         }
       }
       if config.search {
-        files.push({
-          path: "search-index.json",
-          content: search_index(chapters, sources),
-        })
+        let index = search_index(chapters, sources)
+        let index_hash = content_hash(index)
+        hashes["search-index.json"] = index_hash
+        if needs_generation(context, "search-index.json", index_hash) {
+          files.push({ path: "search-index.json", content: index })
+        } else {
+          skipped += 1
+        }
       }
-      Ok({ files, diagnostics })
+      Ok({ files, diagnostics, skipped, manifest: render_manifest(hashes) })
     }
   }
+}
+
+///|
+/// Build a complete static book from in-memory inputs.
+pub fn build_site(
+  config_text : String,
+  summary_text : String,
+  sources : Array[SourceFile],
+) -> Result[BuildOutput, MoonBookError] {
+  build_site_with_context(
+    config_text,
+    summary_text,
+    sources,
+    BuildContext::default(),
+  )
 }

@@ -10,6 +10,8 @@ pub(all) struct BookConfig {
   mut source_dir : String
   mut build_dir : String
   mut theme : String
+  mut template : String?
+  mut static_dir : String
   mut additional_css : Array[String]
   mut additional_js : Array[String]
   mut search : Bool
@@ -25,11 +27,29 @@ pub fn BookConfig::default() -> BookConfig {
     source_dir: "src",
     build_dir: "book",
     theme: "light",
+    template: None,
+    static_dir: "static",
     additional_css: [],
     additional_js: [],
     search: true,
     incremental: true,
   }
+}
+
+///|
+/// A complete parsed book ready for validation or rendering.
+pub(all) struct Book {
+  config : BookConfig
+  summary : Array[SummaryItem]
+  chapters : Array[Chapter]
+}
+
+///|
+/// A heading extracted from one chapter for page-local navigation.
+pub(all) struct Section {
+  title : String
+  id : String
+  level : Int
 }
 
 ///|
@@ -71,6 +91,21 @@ pub(all) struct Diagnostic {
 pub(all) struct BuildOutput {
   files : Array[GeneratedFile]
   diagnostics : Array[Diagnostic]
+  skipped : Int
+  manifest : String
+}
+
+///|
+/// Inputs controlling an incremental in-memory build.
+pub(all) struct BuildContext {
+  previous_hashes : Map[String, String]
+  template : String?
+  force : Bool
+}
+
+///|
+pub fn BuildContext::default() -> BuildContext {
+  { previous_hashes: Map([], capacity=0), template: None, force: true }
 }
 
 ///|
