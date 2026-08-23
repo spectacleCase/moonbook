@@ -11,6 +11,17 @@ extern "c" fn read_file_raw(path : Bytes) -> Bytes = "moonbook_read_file"
 extern "c" fn write_file_raw(path : Bytes, content : Bytes) -> Int = "moonbook_write_file"
 
 ///|
+#borrow(source, destination)
+extern "c" fn copy_tree_raw(
+  source : Bytes,
+  destination : Bytes,
+  skip_markdown : Int,
+) -> Int = "moonbook_copy_tree"
+
+///|
+extern "c" fn exit_raw(code : Int) -> Unit = "moonbook_exit"
+
+///|
 #borrow(root)
 extern "c" fn serve_raw(root : Bytes, port : Int) -> Int = "moonbook_serve"
 
@@ -30,6 +41,28 @@ fn read_file(path : String) -> String? {
 ///|
 fn write_file(path : String, content : String) -> Int {
   write_file_raw(@utf8.encode(path), @utf8.encode(content))
+}
+
+///|
+fn copy_tree(
+  source : String,
+  destination : String,
+  skip_markdown : Bool,
+) -> Int {
+  copy_tree_raw(
+    @utf8.encode(source),
+    @utf8.encode(destination),
+    if skip_markdown {
+      1
+    } else {
+      0
+    },
+  )
+}
+
+///|
+fn exit_process(code : Int) -> Unit {
+  exit_raw(code)
 }
 
 ///|

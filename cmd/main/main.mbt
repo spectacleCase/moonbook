@@ -105,13 +105,106 @@ fn load_project(
 }
 
 ///|
+fn load_template(root : String, config : @moonbook.BookConfig) -> String?? {
+  match config.template {
+    None => Some(None)
+    Some(path) =>
+      match read_file(join_path(root, path)) {
+        None => {
+          println("模板文件不存在：\{path}")
+          None
+        }
+        Some(template) =>
+          if !template.contains("{{content}}") {
+            println("模板必须包含 {{content}} 占位符：\{path}")
+            None
+          } else {
+            Some(Some(template))
+          }
+      }
+  }
+}
+
+///|
+fn check_assets(
+  root : String,
+  config : @moonbook.BookConfig,
+  sources : Array[@moonbook.SourceFile],
+) -> Bool {
+  let mut valid = true
+  let seen : Map[String, Bool] = Map([], capacity=16)
+  for source in sources {
+    for asset in @moonbook.referenced_assets(source.path, source.content) {
+      if seen.contains(asset) {
+        continue
+      }
+      seen[asset] = true
+      let path = if asset.has_prefix("/") {
+        join_path(
+          root,
+          join_path(config.static_dir, asset.trim_start(chars="/").to_owned()),
+        )
+      } else {
+        join_path(root, join_path(config.source_dir, asset))
+      }
+      if !file_exists(path) {
+        println("error: \{source.path}: 静态资源不存在：\{asset}")
+        valid = false
+      }
+    }
+  }
+  valid
+}
+
+///|
 fn build(root : String, write : Bool) -> Bool {
   let loaded = match load_project(root) {
     Some(value) => value
     None => return false
   }
   let (config_text, config, summary, sources) = loaded
-  let output = match @moonbook.build_site(config_text, summary, sources) {
+  let template = match load_template(root, config) {
+    Some(value) => value
+    None => return false
+  }
+  let manifest_path = join_path(
+    root,
+    join_path(config.build_dir, ".moonbook-manifest"),
+  )
+  let manifest = if config.incremental && write {
+    read_file(manifest_path).unwrap_or("")
+  } else {
+    ""
+  }
+  let context = if config.incremental && write {
+    @moonbook.BuildContext::incremental(manifest, template~)
+  } else {
+    @moonbook.BuildContext::{
+      previous_hashes: Map([], capacity=0),
+      template,
+      force: true,
+    }
+  }
+  if config.incremental && write {
+    let expected : Array[String] = ["moonbook.css", "moonbook.js"]
+    if config.search {
+      expected.push("search-index.json")
+    }
+    match @moonbook.parse_summary(summary) {
+      Ok(items) =>
+        for chapter in @moonbook.summary_chapters(items) {
+          expected.push(chapter.output_path)
+        }
+      Err(_) => ()
+    }
+    for path in expected {
+      if !file_exists(join_path(root, join_path(config.build_dir, path))) {
+        context.previous_hashes[path] = ""
+      }
+    }
+  }
+  let output = match
+    @moonbook.build_site_with_context(config_text, summary, sources, context) {
     Ok(value) => value
     Err(error) => {
       println(error.to_string())
@@ -124,6 +217,9 @@ fn build(root : String, write : Bool) -> Bool {
     if diagnostic.severity == "error" {
       valid = false
     }
+  }
+  if !check_assets(root, config, sources) {
+    valid = false
   }
   if !valid || !write {
     return valid
@@ -159,8 +255,36 @@ fn build(root : String, write : Bool) -> Bool {
       }
     }
   }
+  let source_assets = copy_tree(
+    join_path(root, config.source_dir),
+    join_path(root, config.build_dir),
+    true,
+  )
+  if source_assets < 0 {
+    println("源目录静态资源复制失败")
+    valid = false
+  } else {
+    changed += source_assets
+  }
+  if !config.static_dir.is_empty() {
+    let static_assets = copy_tree(
+      join_path(root, config.static_dir),
+      join_path(root, config.build_dir),
+      false,
+    )
+    if static_assets < 0 {
+      println("静态目录复制失败：\{config.static_dir}")
+      valid = false
+    } else {
+      changed += static_assets
+    }
+  }
+  if valid && write_file(manifest_path, output.manifest) < 0 {
+    println("增量构建清单写入失败")
+    valid = false
+  }
   println(
-    "构建完成：\{output.files.length()} 个文件，更新 \{changed} 个",
+    "构建完成：\{output.files.length() + output.skipped} 个生成文件，更新 \{changed} 个，跳过渲染 \{output.skipped} 个",
   )
   valid
 }
@@ -189,10 +313,16 @@ fn main {
   }
   let command = args[1]
   let root = if args.length() > 2 { args[2] } else { "." }
-  match command {
-    "init" => ignore(initialize(root))
-    "build" => ignore(build(root, true))
-    "check" => if build(root, false) { println("检查通过") }
+  let success = match command {
+    "init" => initialize(root)
+    "build" => build(root, true)
+    "check" => {
+      let valid = build(root, false)
+      if valid {
+        println("检查通过")
+      }
+      valid
+    }
     "serve" =>
       if build(root, true) {
         let config = match read_file(join_path(root, "moonbook.toml")) {
@@ -203,11 +333,20 @@ fn main {
         println("预览地址：http://127.0.0.1:\{port}")
         if serve_directory(join_path(root, config.build_dir), port) < 0 {
           println("预览服务器启动失败，请检查端口是否可用")
+          false
+        } else {
+          true
         }
+      } else {
+        false
       }
     _ => {
       println("未知命令：\{command}")
       usage()
+      false
     }
+  }
+  if !success {
+    exit_process(1)
   }
 }
