@@ -2,6 +2,7 @@
 
 ## 0.3.0 - 2026-08-23
 
+- 正式发布 `spectacleCase/moonbook@0.3.0` 到 mooncakes.io；
 - 增加 `Book`、`Section`、`BuildContext` 和五个分层公共包；
 - 增加构建清单、真正的增量渲染跳过和过期页面清理；
 - 增加章节资源、静态目录和附加资源复制与校验；

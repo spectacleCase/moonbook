@@ -20,6 +20,12 @@ MoonBook 是一个使用 MoonBit 编写的 Markdown 文档站与在线书籍生�
 
 ## 快速开始
 
+作为 MoonBit 库依赖安装：
+
+```bash
+moon add spectacleCase/moonbook@0.3.0
+```
+
 MoonBook CLI 当前使用 Native 后端：
 
 ```bash

@@ -15,7 +15,13 @@ moon build --target native
 moon run --target native cmd/main -- --version
 ```
 
-当前在正式发布 mooncakes.io 前，推荐通过仓库源码运行：
+MoonBook 核心包已经发布到 mooncakes.io：
+
+```bash
+moon add spectacleCase/moonbook@0.3.0
+```
+
+CLI 当前推荐通过仓库源码运行：
 
 ```bash
 moon run --target native cmd/main -- init my-book

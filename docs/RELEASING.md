@@ -22,4 +22,4 @@ moon publish --dry-run
 - 包含 MPL-2.0 LICENSE 和上游来源说明；
 - 创建版本标签并发布到 mooncakes.io。
 
-当前仓库已准备 `0.3.0` 发布材料。根据项目维护者要求，正式 mooncakes.io 发布暂缓，执行发布时不需要修改核心代码。
+`spectacleCase/moonbook@0.3.0` 已于 2026-08-23 发布到 mooncakes.io，服务端返回 `200 OK`。后续发布必须先按照语义化版本更新 `moon.mod` 和 `@moonbook.version`。
