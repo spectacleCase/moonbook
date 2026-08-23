@@ -8,9 +8,10 @@
 
 #ifdef _WIN32
 #include <direct.h>
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #define close closesocket
+#define strdup _strdup
 #define mkdir_one(path) _mkdir(path)
 #else
 #include <arpa/inet.h>
@@ -187,6 +188,11 @@ MOONBIT_FFI_EXPORT int32_t moonbook_copy_tree(
 
 MOONBIT_FFI_EXPORT void moonbook_exit(int32_t code) {
   exit(code);
+}
+
+MOONBIT_FFI_EXPORT int32_t moonbook_remove_file(moonbit_bytes_t path) {
+  if (remove((const char *)path) == 0 || errno == ENOENT) return 0;
+  return -1;
 }
 
 static const char *mime_type(const char *path) {

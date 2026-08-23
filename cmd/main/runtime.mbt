@@ -22,6 +22,10 @@ extern "c" fn copy_tree_raw(
 extern "c" fn exit_raw(code : Int) -> Unit = "moonbook_exit"
 
 ///|
+#borrow(path)
+extern "c" fn remove_file_raw(path : Bytes) -> Int = "moonbook_remove_file"
+
+///|
 #borrow(root)
 extern "c" fn serve_raw(root : Bytes, port : Int) -> Int = "moonbook_serve"
 
@@ -63,6 +67,11 @@ fn copy_tree(
 ///|
 fn exit_process(code : Int) -> Unit {
   exit_raw(code)
+}
+
+///|
+fn remove_file(path : String) -> Bool {
+  remove_file_raw(@utf8.encode(path)) == 0
 }
 
 ///|

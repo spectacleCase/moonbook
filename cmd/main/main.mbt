@@ -279,6 +279,19 @@ fn build(root : String, write : Bool) -> Bool {
       changed += static_assets
     }
   }
+  let previous_outputs = @moonbook.parse_manifest(manifest)
+  let current_outputs = @moonbook.parse_manifest(output.manifest)
+  previous_outputs.each(fn(path, _) {
+    if !current_outputs.contains(path) {
+      let stale = join_path(root, join_path(config.build_dir, path))
+      if remove_file(stale) {
+        println("移除过期输出：\{path}")
+      } else {
+        println("过期输出移除失败：\{path}")
+        valid = false
+      }
+    }
+  })
   if valid && write_file(manifest_path, output.manifest) < 0 {
     println("增量构建清单写入失败")
     valid = false
