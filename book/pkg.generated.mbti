@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "spectacleCase/moonbook/book"
+
+import {
+  "spectacleCase/moonbook",
+}
+
+// Values
+pub fn chapters(Array[@moonbook.SummaryItem]) -> Array[@moonbook.Chapter]
+
+pub fn parse(String, String) -> Result[@moonbook.Book, @moonbook.MoonBookError]
+
+pub fn parse_summary(String) -> Result[Array[@moonbook.SummaryItem], @moonbook.MoonBookError]
+
+pub fn sections(String) -> Array[@moonbook.Section]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

@@ -2,29 +2,59 @@
 package "spectacleCase/moonbook"
 
 // Values
+pub fn available_themes() -> Array[String]
+
 pub fn build_site(String, String, Array[SourceFile]) -> Result[BuildOutput, MoonBookError]
+
+pub fn build_site_with_context(String, String, Array[SourceFile], BuildContext) -> Result[BuildOutput, MoonBookError]
 
 pub fn check_links(Array[Chapter], Array[SourceFile]) -> Array[Diagnostic]
 
+pub fn content_hash(String) -> String
+
 pub fn default_config(String) -> String
+
+pub let default_page_template : String
 
 pub let default_theme_css : String
 
 pub let default_theme_js : String
 
+pub fn extract_sections(String) -> Array[Section]
+
+pub fn generate_search_index(Array[Chapter], Array[SourceFile]) -> String
+
+pub fn parse_book(String, String) -> Result[Book, MoonBookError]
+
 pub fn parse_config(String) -> BookConfig
 
+pub fn parse_manifest(String) -> Map[String, String]
+
 pub fn parse_summary(String) -> Result[Array[SummaryItem], MoonBookError]
+
+pub fn referenced_assets(String, String) -> Array[String]
+
+pub fn render_manifest(Map[String, String]) -> String
 
 pub fn render_markdown(String) -> String
 
 pub fn summary_chapters(Array[SummaryItem]) -> Array[Chapter]
+
+pub fn theme_css(String) -> String?
+
+pub fn validate_config(String) -> Array[Diagnostic]
 
 pub let version : String
 
 // Errors
 
 // Types and methods
+pub(all) struct Book {
+  config : BookConfig
+  summary : Array[SummaryItem]
+  chapters : Array[Chapter]
+}
+
 pub(all) struct BookConfig {
   mut title : String
   mut authors : Array[String]
@@ -32,6 +62,8 @@ pub(all) struct BookConfig {
   mut source_dir : String
   mut build_dir : String
   mut theme : String
+  mut template : String?
+  mut static_dir : String
   mut additional_css : Array[String]
   mut additional_js : Array[String]
   mut search : Bool
@@ -39,9 +71,19 @@ pub(all) struct BookConfig {
 }
 pub fn BookConfig::default() -> Self
 
+pub(all) struct BuildContext {
+  previous_hashes : Map[String, String]
+  template : String?
+  force : Bool
+}
+pub fn BuildContext::default() -> Self
+pub fn BuildContext::incremental(String, template? : String?) -> Self
+
 pub(all) struct BuildOutput {
   files : Array[GeneratedFile]
   diagnostics : Array[Diagnostic]
+  skipped : Int
+  manifest : String
 }
 
 pub(all) struct Chapter {
@@ -69,6 +111,12 @@ pub(all) struct MoonBookError {
   message : String
 }
 pub impl Show for MoonBookError
+
+pub(all) struct Section {
+  title : String
+  id : String
+  level : Int
+}
 
 pub(all) struct SourceFile {
   path : String

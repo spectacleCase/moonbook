@@ -2,17 +2,20 @@
 
 MoonBook 是一个使用 MoonBit 编写的 Markdown 文档站与在线书籍生成器，参考 [mdBook](https://github.com/rust-lang/mdBook) 的文档组织方式。它读取 `moonbook.toml` 和 `SUMMARY.md`，生成可直接部署的 HTML、CSS、JavaScript 与搜索索引。
 
-当前版本已经提供可工作的 `init`、`build`、`check` 和 `serve` 命令，以及配置、目录、Markdown 渲染、页面生成、搜索与链接检查 API。
+当前版本提供可工作的 `init`、`build`、`check` 和 `serve` 命令，以及配置、Book 模型、Markdown 渲染、页面生成、搜索、资源检查和增量构建 API。
 
 ## 功能
 
 - 使用 `SUMMARY.md` 管理章节、嵌套章节、分组标题和分隔项；
 - 支持标题锚点、代码块、表格、任务列表、引用、图片、自动链接、有序列表、粗体、斜体、删除线、高亮与提示块；
 - 生成响应式侧边栏、面包屑和前后章导航；
+- 生成页面内二到四级标题目录，并在页面展示作者信息；
 - 输出静态全文搜索索引，并提供章节标题即时筛选；
-- 检查缺失章节、不安全路径、重复章节和内部 Markdown 链接；
-- 支持附加 CSS、JavaScript 和中文内容；
-- 内容未变化时跳过文件写入，提供基础增量构建；
+- 检查缺失章节、不安全路径、重复章节、锚点和静态资源；
+- 提供 `light`、`rust`、`coal` 三套主题与自定义 HTML 页面模板；
+- 自动复制章节资源、静态目录、附加 CSS 和 JavaScript；
+- 使用构建清单跳过未变化页面，并清理不再存在的生成页面；
+- 配置、Book、渲染、搜索和构建能力提供独立公共包；
 - 提供只监听 `127.0.0.1` 的开发预览服务器。
 
 ## 快速开始
@@ -64,6 +67,8 @@ incremental = true
 
 [output.html]
 theme = "light"
+template = ""
+static-dir = "static"
 additional-css = ["theme/custom.css"]
 additional-js = ["theme/custom.js"]
 
@@ -71,7 +76,7 @@ additional-js = ["theme/custom.js"]
 enable = true
 ```
 
-附加资源路径相对于项目根目录，构建时会复制到输出目录并写入页面引用。
+附加资源路径相对于项目根目录。章节源目录内的图片等非 Markdown 文件保持目录结构复制，`static-dir` 则复制到站点根目录。
 
 ## 目录语法
 
@@ -107,6 +112,16 @@ let output = @moonbook.build_site(config_text, summary_text, sources)
 
 主要公开类型包括 `BookConfig`、`Chapter`、`SummaryItem`、`SourceFile`、`GeneratedFile`、`Diagnostic` 和 `BuildOutput`。
 
+分层包可单独导入：
+
+```text
+spectacleCase/moonbook/config
+spectacleCase/moonbook/book
+spectacleCase/moonbook/renderer
+spectacleCase/moonbook/search
+spectacleCase/moonbook/build
+```
+
 ## 开发与验证
 
 ```bash
@@ -117,7 +132,17 @@ moon build --target native
 moon info
 ```
 
-`examples/basic` 提供一个多层中文示例。测试覆盖配置、目录、安全路径、Markdown 转义、表格、任务列表、导航、搜索、链接诊断和内存端到端构建。
+`examples/basic` 提供完整功能展示，`examples/advanced` 验证中文路径、深色主题、自定义模板和静态目录。测试覆盖配置诊断、目录、安全路径、Markdown、模板、主题、资源、搜索、链接与增量构建。
+
+## 文档
+
+- [安装与运行](docs/INSTALLATION.md)
+- [配置参考](docs/CONFIGURATION.md)
+- [主题与模板](docs/THEMES.md)
+- [架构与公共包](docs/ARCHITECTURE.md)
+- [部署指南](docs/DEPLOYMENT.md)
+- [mdBook 迁移说明](docs/MIGRATION.md)
+- [发布检查清单](docs/RELEASING.md)
 
 ## 范围说明
 

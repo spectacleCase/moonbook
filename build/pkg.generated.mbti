@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "spectacleCase/moonbook/build"
+
+import {
+  "spectacleCase/moonbook",
+}
+
+// Values
+pub fn all(String, String, Array[@moonbook.SourceFile]) -> Result[@moonbook.BuildOutput, @moonbook.MoonBookError]
+
+pub fn incremental(String, String, Array[@moonbook.SourceFile], @moonbook.BuildContext) -> Result[@moonbook.BuildOutput, @moonbook.MoonBookError]
+
+pub fn parse_manifest(String) -> Map[String, String]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+
