@@ -1,0 +1,19 @@
+[book]
+title = "月光手册"
+authors = ["桌角的眼镜", "MoonBook Contributors"]
+language = "zh-CN"
+src = "src"
+
+[build]
+build-dir = "book"
+incremental = true
+
+[output.html]
+theme = "coal"
+template = "theme/page.html"
+static-dir = "public"
+additional-css = ["theme/accent.css"]
+additional-js = []
+
+[output.html.search]
+enable = true

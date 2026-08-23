@@ -1,5 +1,7 @@
 # Markdown 展示
 
+![MoonBook 构建流程](assets/pipeline.svg)
+
 > MoonBook 面向常见技术文档提供安全的 Markdown 子集。
 
 | 能力 | 状态 |

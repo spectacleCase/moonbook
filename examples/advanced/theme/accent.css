@@ -1,0 +1,10 @@
+.content article > h1:first-child {
+  color: #f0b55f;
+}
+
+.advanced-badge {
+  color: var(--accent);
+  font: 700 12px sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}

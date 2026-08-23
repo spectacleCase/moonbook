@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" role="img" aria-labelledby="title">
+  <title id="title">MoonBook 标志</title>
+  <circle cx="90" cy="90" r="82" fill="#e3a34e"/>
+  <path d="M65 45h58a12 12 0 0 1 12 12v78H75a18 18 0 0 0-18 18V53a8 8 0 0 1 8-8Z" fill="#25282d"/>
+  <path d="M75 135h60v12H75a6 6 0 0 1 0-12Z" fill="#fff8ee"/>
+  <path d="M78 68h36M78 86h42M78 104h28" stroke="#fff8ee" stroke-width="7" stroke-linecap="round"/>
+</svg>

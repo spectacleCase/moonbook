@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="150" viewBox="0 0 760 150" role="img" aria-labelledby="title">
+  <title id="title">MoonBook 构建流程</title>
+  <rect width="760" height="150" rx="18" fill="#f3eee2"/>
+  <g fill="#b5462d" font-family="sans-serif" font-size="18" text-anchor="middle">
+    <rect x="35" y="45" width="150" height="60" rx="9" fill="#fffdf7" stroke="#b5462d"/>
+    <text x="110" y="82">Markdown</text>
+    <rect x="305" y="45" width="150" height="60" rx="9" fill="#fffdf7" stroke="#b5462d"/>
+    <text x="380" y="82">MoonBook</text>
+    <rect x="575" y="45" width="150" height="60" rx="9" fill="#fffdf7" stroke="#b5462d"/>
+    <text x="650" y="82">静态网站</text>
+    <path d="M195 75h95m-16-12 16 12-16 12M465 75h95m-16-12 16 12-16 12" fill="none" stroke="#b5462d" stroke-width="3"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="{{language}}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{page_title}} · {{book_title}}</title>
+    {{head}}
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="advanced-badge">Advanced Example</div>
+        {{sidebar}}
+      </aside>
+      <main class="content">
+        <div class="breadcrumbs">{{breadcrumbs}}</div>
+        {{toc}}
+        <article>{{content}}</article>
+        <div class="authors">{{authors}}</div>
+        <nav class="chapter-nav">{{navigation}}</nav>
+      </main>
+    </div>
+    {{scripts}}
+  </body>
+</html>
