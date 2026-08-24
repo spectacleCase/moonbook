@@ -15,4 +15,3 @@ pub fn build_index(Array[@moonbook.Chapter], Array[@moonbook.SourceFile]) -> Str
 // Type aliases
 
 // Traits
-

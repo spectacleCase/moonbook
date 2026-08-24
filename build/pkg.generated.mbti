@@ -19,4 +19,3 @@ pub fn parse_manifest(String) -> Map[String, String]
 // Type aliases
 
 // Traits
-

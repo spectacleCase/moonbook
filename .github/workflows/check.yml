@@ -8,8 +8,6 @@ on:
 
 jobs:
   build:
-    env:
-      MOONBIT_INSTALL_VERSION: 0.1.20260703
     permissions:
       contents: read
     strategy:
@@ -39,10 +37,10 @@ jobs:
         run: moon version --all
 
       - name: Check
-        run: moon check --target all
+        run: moon check --target all --deny-warn
 
       - name: Test
-        run: moon test --target all
+        run: moon test --target all --deny-warn
 
       - name: Build native CLI
         run: moon build --target native
