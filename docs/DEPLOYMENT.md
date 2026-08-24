@@ -17,4 +17,4 @@ moon run --target native cmd/main -- build docs
 4. 构建站点并验证首页、主题和搜索索引存在；
 5. 上传输出目录。
 
-仓库中的 `.github/workflows/check.yml` 同时在 Ubuntu、macOS 和 Windows 构建 Native CLI，并在 Unix 环境构建两个示例站。
+仓库中的 `.github/workflows/check.yml` 在 Ubuntu 和 macOS 执行全后端测试、Native CLI 与两个示例站验证，在 Windows 执行 wasm、wasm-gc 和 JavaScript 三个可移植后端测试。Windows Native CLI 不在当前发布承诺范围内。

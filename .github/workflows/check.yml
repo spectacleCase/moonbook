@@ -15,7 +15,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -39,10 +39,20 @@ jobs:
       - name: Check
         run: moon check --target all --deny-warn
 
-      - name: Test
+      - name: Test all targets
+        if: ${{ matrix.os != 'windows-latest' }}
         run: moon test --target all --deny-warn
 
+      - name: Test portable targets on Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: pwsh
+        run: |
+          moon test --target wasm --deny-warn
+          moon test --target wasm-gc --deny-warn
+          moon test --target js --deny-warn
+
       - name: Build native CLI
+        if: ${{ matrix.os != 'windows-latest' }}
         run: moon build --target native
 
       - name: Build acceptance examples
