@@ -32,7 +32,7 @@ MoonBook 不追求重新实现完整 CommonMark，而是实现面向技术文档
 - 配置 GitHub Actions，计划在多个操作系统上执行检查、测试和格式验证；
 - 完成本项目申报书，明确移植来源、开发边界和技术路线。
 
-当前已完成申报范围内的可验收版本，`spectacleCase/moonbook@0.3.0` 已正式发布到 mooncakes.io，兼容 MoonBit 编译器 `v0.10.9` 的 `0.3.1` 版本正在发布。
+当前已完成申报范围内的可验收版本，兼容 MoonBit 编译器 `v0.10.9` 的 `spectacleCase/moonbook@0.3.1` 已正式发布到 mooncakes.io。
 
 ## 核心功能范围
 

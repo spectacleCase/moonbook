@@ -2,6 +2,7 @@
 
 ## 0.3.1 - 2026-08-24
 
+- 正式发布 `spectacleCase/moonbook@0.3.1` 到 mooncakes.io；
 - 更新并验证 MoonBit `v0.10.9` 工具链兼容性；
 - 迁移 Native CLI 到最新可执行包配置格式；
 - CI 改用最新稳定工具链，并对检查与测试启用零警告门槛；
