@@ -32,7 +32,7 @@ MoonBook 不追求重新实现完整 CommonMark，而是实现面向技术文档
 - 配置 GitHub Actions，计划在多个操作系统上执行检查、测试和格式验证；
 - 完成本项目申报书，明确移植来源、开发边界和技术路线。
 
-当前已完成申报范围内的可验收版本，`spectacleCase/moonbook@0.3.0` 已正式发布到 mooncakes.io。
+当前已完成申报范围内的可验收版本，`spectacleCase/moonbook@0.3.0` 已正式发布到 mooncakes.io，兼容 MoonBit 编译器 `v0.10.9` 的 `0.3.1` 版本正在发布。
 
 ## 核心功能范围
 
@@ -117,8 +117,8 @@ Markdown 语法处理限定为文档站常用安全子集，不宣称完整 Comm
 - 中文 README、安装说明、命令参考、配置参考和主题说明；
 - GitHub Actions 多平台 CI；
 - 版本更新记录、迁移说明、架构文档和许可证来源说明；
-- 可通过 `moon publish --dry-run` 校验的 0.3.0 发布候选包；
-- 已发布至 mooncakes.io 的 `spectacleCase/moonbook@0.3.0` 可安装版本。
+- 可通过 `moon publish --dry-run` 校验的发布候选包；
+- 已发布至 mooncakes.io 的 `spectacleCase/moonbook` 可安装版本。
 
 ## 项目价值与维护计划
 

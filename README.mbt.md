@@ -23,7 +23,7 @@ MoonBook 是一个使用 MoonBit 编写的 Markdown 文档站与在线书籍生�
 作为 MoonBit 库依赖安装：
 
 ```bash
-moon add spectacleCase/moonbook@0.3.0
+moon add spectacleCase/moonbook@0.3.1
 ```
 
 MoonBook CLI 当前使用 Native 后端：
@@ -130,10 +130,12 @@ spectacleCase/moonbook/build
 
 ## 开发与验证
 
+要求 MoonBit 编译器版本不低于 `v0.10.9`。
+
 ```bash
 moon fmt
-moon check --target all
-moon test --target all
+moon check --target all --deny-warn
+moon test --target all --deny-warn
 moon build --target native
 moon info
 ```

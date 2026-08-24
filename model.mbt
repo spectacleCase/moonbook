@@ -1,6 +1,6 @@
 ///|
 /// Current project version.
-pub let version : String = "0.3.0"
+pub let version : String = "0.3.1"
 
 ///|
 pub(all) struct BookConfig {

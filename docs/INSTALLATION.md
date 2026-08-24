@@ -2,7 +2,7 @@
 
 ## 环境要求
 
-- MoonBit 2026 年工具链或更新版本；
+- MoonBit 编译器 `v0.10.9` 或更新版本；
 - 可用的 Native C 编译环境；
 - Git，仅从仓库获取源码时需要。
 
@@ -18,7 +18,7 @@ moon run --target native cmd/main -- --version
 MoonBook 核心包已经发布到 mooncakes.io：
 
 ```bash
-moon add spectacleCase/moonbook@0.3.0
+moon add spectacleCase/moonbook@0.3.1
 ```
 
 CLI 当前推荐通过仓库源码运行：

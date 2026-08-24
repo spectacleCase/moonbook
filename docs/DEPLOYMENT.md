@@ -11,7 +11,7 @@ moon run --target native cmd/main -- build docs
 
 ## CI 建议
 
-1. 固定或记录 MoonBit 工具链版本；本仓库 CI 固定为 `0.1.20260703`，避免滚动格式器造成不可复现结果；
+1. 使用最新稳定 MoonBit 工具链；当前最低验收版本为编译器 `v0.10.9`，CI 会记录实际版本；
 2. 运行 `moon check --target all` 和 `moon test --target all`；
 3. 运行 `moonbook check`，依靠非零退出码阻断错误文档；
 4. 构建站点并验证首页、主题和搜索索引存在；

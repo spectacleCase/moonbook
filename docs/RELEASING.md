@@ -5,8 +5,8 @@
 ```bash
 moon fmt
 moon info
-moon check --target all
-moon test --target all
+moon check --target all --deny-warn
+moon test --target all --deny-warn
 moon build --target native
 moon run --target native cmd/main -- check examples/basic
 moon run --target native cmd/main -- check examples/advanced
@@ -22,4 +22,4 @@ moon publish --dry-run
 - 包含 MPL-2.0 LICENSE 和上游来源说明；
 - 创建版本标签并发布到 mooncakes.io。
 
-`spectacleCase/moonbook@0.3.0` 已于 2026-08-23 发布到 mooncakes.io，服务端返回 `200 OK`。后续发布必须先按照语义化版本更新 `moon.mod` 和 `@moonbook.version`。
+`spectacleCase/moonbook@0.3.0` 已于 2026-08-23 发布到 mooncakes.io。`0.3.1` 使用 MoonBit 编译器 `v0.10.9` 完成发布验证。后续发布必须先按照语义化版本更新 `moon.mod` 和 `@moonbook.version`。
